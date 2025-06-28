@@ -133,12 +133,20 @@ function getVideoUrl($video) {
     
     switch ($storage['storage_type']) {
         case 'contabo':
-            // Para Contabo S3
-            $url = $storage['endpoint'] . '/' . $storage['bucket'] . '/' . $video['storage_path'];
+            // TEMPORAL: Usar proxy mientras se configuran permisos públicos
+            // Esto evitará el error 401 Unauthorized
+            return SITE_URL . '/s3-proxy.php?v=' . $video['embed_code'];
+            
+            /* Código original - descomentar cuando los permisos estén configurados
+            $endpoint = rtrim($storage['endpoint'], '/');
+            $bucket = trim($storage['bucket'], '/');
+            $path = ltrim($video['storage_path'], '/');
+            
+            $url = $endpoint . '/' . $bucket . '/' . $path;
             return $url;
+            */
             
         case 'local':
-            // Para almacenamiento local
             return SITE_URL . '/stream.php?v=' . $video['embed_code'];
             
         default:
