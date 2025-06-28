@@ -125,13 +125,25 @@ function isValidVideoExtension($filename) {
 }
 
 function getVideoUrl($video) {
-    $storage = getActiveStorage();
+    // Primero intentamos obtener la configuración de almacenamiento del video específico
+    $storageType = $video['storage_type'] ?? null;
+    
+    // Si no tiene storage_type, obtenemos el almacenamiento activo actual
+    if (!$storageType) {
+        $storage = getActiveStorage();
+        $storageType = $storage['storage_type'] ?? 'local';
+    } else {
+        // Si el video tiene storage_type, obtenemos la configuración de ese tipo
+        $stmt = db()->prepare("SELECT * FROM storage_config WHERE storage_type = ?");
+        $stmt->execute([$storageType]);
+        $storage = $stmt->fetch();
+    }
     
     if (!$storage) {
         return '#';
     }
     
-    switch ($storage['storage_type']) {
+    switch ($storageType) {
         case 'contabo':
             // TEMPORAL: Usar proxy mientras se configuran permisos públicos
             // Esto evitará el error 401 Unauthorized
@@ -145,6 +157,20 @@ function getVideoUrl($video) {
             $url = $endpoint . '/' . $bucket . '/' . $path;
             return $url;
             */
+            
+        case 'wasabi':
+            // Para Wasabi S3
+            $url = $storage['endpoint'] . '/' . $storage['bucket'] . '/' . $video['storage_path'];
+            // Asegurar que tenga protocolo
+            if (strpos($url, 'http') !== 0) {
+                $url = 'https://' . $url;
+            }
+            return $url;
+            
+        case 'aws':
+            // Para AWS S3
+            $url = 'https://' . $storage['bucket'] . '.s3.' . $storage['region'] . '.amazonaws.com/' . $video['storage_path'];
+            return $url;
             
         case 'local':
             return SITE_URL . '/stream.php?v=' . $video['embed_code'];
@@ -163,4 +189,41 @@ function formatDuration($seconds) {
         return sprintf('%d:%02d:%02d', $h, $m, $s);
     }
     return sprintf('%d:%02d', $m, $s);
+}
+
+// NUEVAS FUNCIONES AGREGADAS:
+
+// Función auxiliar para verificar el estado del almacenamiento
+function getStorageStatus() {
+    $storages = [];
+    $stmt = db()->query("SELECT * FROM storage_config ORDER BY is_active DESC, storage_type ASC");
+    
+    while ($row = $stmt->fetch()) {
+        $storages[] = [
+            'type' => $row['storage_type'],
+            'active' => $row['is_active'] == 1,
+            'configured' => !empty($row['access_key']) || $row['storage_type'] == 'local'
+        ];
+    }
+    
+    return $storages;
+}
+
+// Función para obtener información de almacenamiento del usuario
+function getUserStorageInfo($userId) {
+    $stmt = db()->prepare("
+        SELECT 
+            COUNT(CASE WHEN storage_type = 'local' THEN 1 END) as local_files,
+            COUNT(CASE WHEN storage_type = 'contabo' THEN 1 END) as contabo_files,
+            COUNT(CASE WHEN storage_type = 'wasabi' THEN 1 END) as wasabi_files,
+            COUNT(CASE WHEN storage_type = 'aws' THEN 1 END) as aws_files,
+            SUM(CASE WHEN storage_type = 'local' THEN file_size ELSE 0 END) as local_size,
+            SUM(CASE WHEN storage_type = 'contabo' THEN file_size ELSE 0 END) as contabo_size,
+            SUM(CASE WHEN storage_type = 'wasabi' THEN file_size ELSE 0 END) as wasabi_size,
+            SUM(CASE WHEN storage_type = 'aws' THEN file_size ELSE 0 END) as aws_size
+        FROM videos 
+        WHERE user_id = ? AND status = 'active'
+    ");
+    $stmt->execute([$userId]);
+    return $stmt->fetch();
 }
