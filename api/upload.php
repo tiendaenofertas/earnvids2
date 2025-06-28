@@ -1,5 +1,5 @@
 <?php
-// api/upload.php - Sistema completo de subida de videos
+// api/upload.php - Sistema completo de subida de videos con respeto a configuración de almacenamiento
 require_once '../config/app.php';
 require_once '../includes/functions.php';
 require_once '../includes/db_connect.php';
@@ -8,7 +8,7 @@ header('Content-Type: application/json');
 
 // Debugging inicial
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // No mostrar errores en JSON
+ini_set('display_errors', 0);
 
 // Log de errores
 function logError($message) {
@@ -141,15 +141,82 @@ try {
             }
             break;
             
+        case 'wasabi':
+            // Subida a Wasabi S3
+            require_once '../includes/storage_manager.php';
+            
+            try {
+                // Wasabi usa el mismo protocolo S3 que Contabo
+                $s3Client = new SimpleS3Client(
+                    $storage['access_key'],
+                    $storage['secret_key'],
+                    $storage['endpoint'],
+                    $storage['region']
+                );
+                
+                $key = 'videos/' . $fileName;
+                $result = $s3Client->putObject(
+                    $storage['bucket'],
+                    $key,
+                    $file['tmp_name'],
+                    'video/' . $extension
+                );
+                
+                if ($result) {
+                    $uploadSuccess = true;
+                    $storagePath = $key;
+                    logError("Archivo subido a Wasabi: " . $key);
+                } else {
+                    throw new Exception('Error al subir a Wasabi S3');
+                }
+            } catch (Exception $e) {
+                logError("Error Wasabi: " . $e->getMessage());
+                throw new Exception('Error al subir a Wasabi: ' . $e->getMessage());
+            }
+            break;
+            
+        case 'aws':
+            // Subida a AWS S3
+            require_once '../includes/storage_manager.php';
+            
+            try {
+                $s3Client = new SimpleS3Client(
+                    $storage['access_key'],
+                    $storage['secret_key'],
+                    'https://s3.' . $storage['region'] . '.amazonaws.com',
+                    $storage['region']
+                );
+                
+                $key = 'videos/' . $fileName;
+                $result = $s3Client->putObject(
+                    $storage['bucket'],
+                    $key,
+                    $file['tmp_name'],
+                    'video/' . $extension
+                );
+                
+                if ($result) {
+                    $uploadSuccess = true;
+                    $storagePath = $key;
+                    logError("Archivo subido a AWS S3: " . $key);
+                } else {
+                    throw new Exception('Error al subir a AWS S3');
+                }
+            } catch (Exception $e) {
+                logError("Error AWS: " . $e->getMessage());
+                throw new Exception('Error al subir a AWS S3: ' . $e->getMessage());
+            }
+            break;
+            
         default:
-            throw new Exception('Tipo de almacenamiento no soportado');
+            throw new Exception('Tipo de almacenamiento no soportado: ' . $storage['storage_type']);
     }
     
     if (!$uploadSuccess) {
         throw new Exception('Error al procesar la subida del archivo');
     }
     
-    // Guardar en base de datos
+    // Guardar en base de datos con toda la información necesaria
     $stmt = db()->prepare("
         INSERT INTO videos (user_id, title, filename, original_name, file_size, 
                           storage_type, storage_path, embed_code, status)
@@ -182,16 +249,18 @@ try {
     logActivity('upload_video', [
         'video_id' => $videoId,
         'filename' => $fileName,
-        'size' => $file['size']
+        'size' => $file['size'],
+        'storage_type' => $storage['storage_type']
     ]);
     
-    // Respuesta exitosa
+    // Respuesta exitosa con información adicional
     echo json_encode([
         'success' => true,
         'video_id' => $videoId,
         'embed_code' => $embedCode,
         'title' => $title,
-        'message' => 'Video subido exitosamente'
+        'storage_type' => $storage['storage_type'],
+        'message' => 'Video subido exitosamente a ' . ucfirst($storage['storage_type'])
     ]);
     
 } catch (Exception $e) {
