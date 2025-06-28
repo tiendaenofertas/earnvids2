@@ -61,6 +61,12 @@ $stmt = db()->prepare("
 ");
 $stmt->execute([$_SESSION['user_id']]);
 $userInfo = $stmt->fetch();
+
+// Obtener información de almacenamiento por tipo
+$storageInfo = getUserStorageInfo($_SESSION['user_id']);
+
+// Obtener almacenamiento activo actual
+$activeStorage = getActiveStorage();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -135,8 +141,43 @@ $userInfo = $stmt->fetch();
             word-break: break-all;
             margin: 15px 0;
         }
+        .storage-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: rgba(0, 255, 136, 0.1);
+            color: var(--accent-green);
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
+        .storage-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .storage-stat {
+            background-color: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .storage-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .storage-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
         @media (max-width: 768px) {
             .account-grid {
+                grid-template-columns: 1fr;
+            }
+            .storage-stats {
                 grid-template-columns: 1fr;
             }
         }
@@ -227,6 +268,55 @@ $userInfo = $stmt->fetch();
                         <span class="info-label">Descargas totales</span>
                         <span><?= number_format($userInfo['total_downloads']) ?></span>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Nueva sección de información de almacenamiento -->
+            <div class="account-section" style="margin-bottom: 30px;">
+                <h3 class="section-title">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z"/>
+                    </svg>
+                    Almacenamiento
+                    <span class="storage-indicator"><?= ucfirst($activeStorage['storage_type']) ?> Activo</span>
+                </h3>
+                
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Actualmente, todos los nuevos archivos se almacenan en <strong><?= ucfirst($activeStorage['storage_type']) ?></strong>.
+                </p>
+                
+                <div class="storage-stats">
+                    <?php if ($storageInfo['local_files'] > 0): ?>
+                    <div class="storage-stat">
+                        <div class="storage-stat-value"><?= $storageInfo['local_files'] ?></div>
+                        <div class="storage-stat-label">Archivos Locales</div>
+                        <div style="font-size: 12px; margin-top: 5px;"><?= formatFileSize($storageInfo['local_size']) ?></div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php if ($storageInfo['contabo_files'] > 0): ?>
+                    <div class="storage-stat">
+                        <div class="storage-stat-value"><?= $storageInfo['contabo_files'] ?></div>
+                        <div class="storage-stat-label">Archivos en Contabo</div>
+                        <div style="font-size: 12px; margin-top: 5px;"><?= formatFileSize($storageInfo['contabo_size']) ?></div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php if ($storageInfo['wasabi_files'] > 0): ?>
+                    <div class="storage-stat">
+                        <div class="storage-stat-value"><?= $storageInfo['wasabi_files'] ?></div>
+                        <div class="storage-stat-label">Archivos en Wasabi</div>
+                        <div style="font-size: 12px; margin-top: 5px;"><?= formatFileSize($storageInfo['wasabi_size']) ?></div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php if ($storageInfo['aws_files'] > 0): ?>
+                    <div class="storage-stat">
+                        <div class="storage-stat-value"><?= $storageInfo['aws_files'] ?></div>
+                        <div class="storage-stat-label">Archivos en AWS</div>
+                        <div style="font-size: 12px; margin-top: 5px;"><?= formatFileSize($storageInfo['aws_size']) ?></div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
             
