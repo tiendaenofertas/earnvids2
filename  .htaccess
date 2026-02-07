@@ -1,3 +1,0 @@
-# Desactivar todo temporalmente
-Options -Indexes
-php_flag display_errors On
