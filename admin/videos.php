@@ -1,42 +1,33 @@
 <?php
+// admin/videos.php - Gestión de Videos conectada a API segura
 require_once '../config/app.php';
 require_once '../includes/functions.php';
-requireLogin();
+require_once '../includes/auth.php';
 
-$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$perPage = 20;
+requireAdmin();
+
+// Paginación simple
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$perPage = 15;
 $offset = ($page - 1) * $perPage;
 
-if (isAdmin()) {
-    $countStmt = db()->query("SELECT COUNT(*) FROM videos WHERE status = 'active'");
-    $totalVideos = $countStmt->fetchColumn();
-    
-    $stmt = db()->prepare("
-        SELECT v.*, u.username 
-        FROM videos v
-        JOIN users u ON v.user_id = u.id
-        WHERE v.status = 'active'
-        ORDER BY v.created_at DESC
-        LIMIT ? OFFSET ?
-    ");
-    $stmt->execute([$perPage, $offset]);
-} else {
-    $countStmt = db()->prepare("SELECT COUNT(*) FROM videos WHERE user_id = ? AND status = 'active'");
-    $countStmt->execute([$_SESSION['user_id']]);
-    $totalVideos = $countStmt->fetchColumn();
-    
-    $stmt = db()->prepare("
-        SELECT v.*, u.username 
-        FROM videos v
-        JOIN users u ON v.user_id = u.id
-        WHERE v.user_id = ? AND v.status = 'active'
-        ORDER BY v.created_at DESC
-        LIMIT ? OFFSET ?
-    ");
-    $stmt->execute([$_SESSION['user_id'], $perPage, $offset]);
-}
-
+// Obtener videos con info de usuario
+$stmt = db()->prepare("
+    SELECT v.*, u.username 
+    FROM videos v 
+    LEFT JOIN users u ON v.user_id = u.id 
+    WHERE v.status != 'deleted'
+    ORDER BY v.created_at DESC 
+    LIMIT ? OFFSET ?
+");
+// PDO necesita enteros para LIMIT/OFFSET
+$stmt->bindValue(1, $perPage, PDO::PARAM_INT);
+$stmt->bindValue(2, $offset, PDO::PARAM_INT);
+$stmt->execute();
 $videos = $stmt->fetchAll();
+
+// Total para paginación
+$totalVideos = db()->query("SELECT COUNT(*) FROM videos WHERE status != 'deleted'")->fetchColumn();
 $totalPages = ceil($totalVideos / $perPage);
 ?>
 <!DOCTYPE html>
@@ -44,19 +35,16 @@ $totalPages = ceil($totalVideos / $perPage);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Videos - <?= SITE_NAME ?></title>
+    <title>Gestión de Videos - Admin</title>
     <link rel="stylesheet" href="/assets/css/style.css">
     <style>
-        .videos-table { background-color: var(--bg-card); border-radius: 12px; overflow: hidden; }
-        .videos-table table { width: 100%; border-collapse: collapse; }
-        .videos-table th { background-color: var(--bg-secondary); padding: 15px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; color: var(--text-secondary); }
-        .videos-table td { padding: 15px; border-bottom: 1px solid var(--border-color); }
-        .video-title-cell { display: flex; align-items: center; gap: 15px; }
-        .video-thumb-small { width: 80px; height: 45px; background-color: var(--bg-secondary); border-radius: 6px; overflow: hidden; }
-        .video-thumb-small img { width: 100%; height: 100%; object-fit: cover; }
-        .action-buttons { display: flex; gap: 10px; }
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
-        .empty-state svg { width: 80px; height: 80px; margin-bottom: 20px; opacity: 0.3; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-local { background: #3b82f6; color: white; }
+        .badge-cloud { background: #8b5cf6; color: white; } /* Wasabi/Contabo */
+        .action-btn { cursor: pointer; border: none; background: none; padding: 5px; }
+        .btn-delete { color: #ef4444; }
+        .btn-delete:hover { color: #dc2626; }
+        .pagination { margin-top: 20px; display: flex; gap: 10px; }
     </style>
 </head>
 <body>
@@ -64,108 +52,92 @@ $totalPages = ceil($totalVideos / $perPage);
     
     <div class="main-content">
         <div class="page-header">
-            <h1 class="page-title">Mis Videos</h1>
-            <button class="btn" onclick="location.href='/upload.php'">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
-                </svg>
-                Subir Video
-            </button>
+            <h1 class="page-title">Gestión de Videos (<?= $totalVideos ?>)</h1>
         </div>
         
-        <?php if (empty($videos)): ?>
-            <div class="videos-table">
-                <div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/>
-                    </svg>
-                    <h3>No tienes videos subidos aún</h3>
-                    <p>Comienza subiendo tu primer video</p>
-                    <a href="/upload.php" class="btn" style="margin-top: 20px;">Subir Video</a>
-                </div>
-            </div>
-        <?php else: ?>
-            <div class="videos-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Video</th>
-                            <th>Vistas</th>
-                            <th>Tamaño</th>
-                            <th>Fecha</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($videos as $video): ?>
-                        <tr>
-                            <td>
-                                <div class="video-title-cell">
-                                    <div class="video-thumb-small">
-                                        <div style="width: 100%; height: 100%; background: var(--bg-hover); display: flex; align-items: center; justify-content: center;">
-                                            <svg width="30" height="30" viewBox="0 0 24 24" fill="var(--text-secondary)">
-                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <strong><?= htmlspecialchars($video['title']) ?></strong>
-                                        <?php if (isAdmin()): ?>
-                                            <br><small style="color: var(--text-secondary);">por <?= htmlspecialchars($video['username']) ?></small>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><?= number_format($video['views']) ?></td>
-                            <td><?= formatFileSize($video['file_size']) ?></td>
-                            <td><?= date('d/m/Y', strtotime($video['created_at'])) ?></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="/watch.php?v=<?= $video['embed_code'] ?>" target="_blank" class="btn btn-secondary" style="padding: 6px 12px;">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                                        </svg>
-                                    </a>
-                                    <button onclick="copyToClipboard('<?= SITE_URL ?>/watch.php?v=<?= $video['embed_code'] ?>')" class="btn btn-secondary" style="padding: 6px 12px;">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                                        </svg>
-                                    </button>
-                                    <button onclick="deleteVideo(<?= $video['id'] ?>)" class="btn btn-danger" style="padding: 6px 12px;">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Miniatura</th>
+                        <th>Título</th>
+                        <th>Usuario</th>
+                        <th>Almacenamiento</th>
+                        <th>Vistas</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($videos as $video): ?>
+                    <tr id="video-row-<?= $video['id'] ?>">
+                        <td>#<?= $video['id'] ?></td>
+                        <td>
+                            <div style="width: 60px; height: 34px; background: #333; border-radius: 4px; overflow: hidden;">
+                                <img src="/assets/img/video-placeholder.jpg" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                        </td>
+                        <td>
+                            <a href="/watch.php?v=<?= $video['embed_code'] ?>" target="_blank" style="color: var(--text-primary); text-decoration: none;">
+                                <?= htmlspecialchars($video['title']) ?>
+                            </a>
+                            <div style="font-size: 11px; color: var(--text-secondary);"><?= $video['filename'] ?></div>
+                        </td>
+                        <td><?= htmlspecialchars($video['username'] ?? 'Anónimo') ?></td>
+                        <td>
+                            <?php if ($video['storage_type'] === 'local'): ?>
+                                <span class="badge badge-local">LOCAL</span>
+                            <?php else: ?>
+                                <span class="badge badge-cloud"><?= strtoupper($video['storage_type']) ?></span>
+                            <?php endif; ?>
+                            <div style="font-size: 11px; margin-top: 2px;"><?= formatFileSize($video['file_size']) ?></div>
+                        </td>
+                        <td><?= number_format($video['views']) ?></td>
+                        <td>
+                            <button class="action-btn btn-delete" onclick="deleteVideo(<?= $video['id'] ?>)" title="Eliminar Video">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <?php if ($totalPages > 1): ?>
+        <div class="pagination">
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a href="?page=<?= $i ?>" class="btn <?= $i === $page ? 'btn-primary' : 'btn-secondary' ?>"><?= $i ?></a>
+            <?php endfor; ?>
+        </div>
         <?php endif; ?>
     </div>
     
-    <script src="/assets/js/main.js"></script>
     <script>
-        function deleteVideo(videoId) {
-            if (confirm('¿Estás seguro de eliminar este video?')) {
-                fetch('/api/delete-video.php', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ video_id: videoId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification('Video eliminado exitosamente');
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
-                        showNotification(data.message || 'Error al eliminar', 'error');
-                    }
-                });
+    function deleteVideo(id) {
+        if (!confirm('¿Estás SEGURO de eliminar este video? Se borrará de la nube/disco y no se puede recuperar.')) return;
+        
+        fetch('/api/delete-video.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ video_id: id })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Eliminar fila visualmente con efecto fade
+                const row = document.getElementById('video-row-' + id);
+                row.style.opacity = '0.5';
+                setTimeout(() => row.remove(), 500);
+                alert('Video eliminado correctamente.');
+            } else {
+                alert('Error: ' + data.message);
             }
-        }
+        })
+        .catch(err => alert('Error de conexión con el servidor'));
+    }
     </script>
 </body>
 </html>
