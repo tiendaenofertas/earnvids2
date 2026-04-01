@@ -1,13 +1,11 @@
 <?php
 /**
  * Plugin Name: Mainter SEO
- * Plugin URI:        https://frambersilva.com/contacto
+ * Plugin URI:        https://xvidspro.com/
  * Description: Mainter es un plugin SEO ultra ligero todo en uno.
  * Version: 1.0.0
  * Author: Framber Silva
- * Author URI:        https://frambersilva.com
- * License:           GPLv3
- * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
+ * Author URI:        https://xvidspro.com
  */
 // Seguridad: Evitar acceso directo
 if ( ! defined( 'ABSPATH' ) ) {
