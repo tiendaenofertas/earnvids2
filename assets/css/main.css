@@ -1,0 +1,1305 @@
+/* Reset  */
+
+@view-transition {
+  navigation: auto;
+}
+
+/* 3. Enable keyword animations */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    interpolate-size: allow-keywords;
+  }
+}
+
+:root {
+    --container-width: 1200px;
+    --transition-speed: 0.3s;
+}
+
+/* Reset básico para asegurar consistencia */
+*, *::before, *::after {
+    box-sizing: border-box;
+    padding: 0;
+
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background-color: var(--body-bg, #ffffff); /* Variable con fallback a blanco */
+    color: var(--theme-text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+ul, ol{
+    list-style: none;
+}
+
+.container {
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.my-2{
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Header */
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 70px; /* Ajusta la altura de tu header */
+    position: relative;
+}
+
+/* Logo */
+.site-branding img { max-height: 50px; width: auto; }
+.site-branding .site-title { margin: 0; font-size: 1.5rem; }
+
+/* --- MENÚ ESCRITORIO (Pantallas Grandes) --- */
+@media (min-width: 992px) {
+    /* Ocultar botones móviles */
+    .mobile-toggle, .mobile-close { display: none; }
+
+    /* Estilo del Menú Horizontal */
+    .main-navigation .menu-list {
+        display: flex;
+        gap: 30px;
+        list-style: none;
+        margin: 0; padding: 0;
+    }
+    
+    .main-navigation a {
+        text-decoration: none;
+        font-weight: 500;
+        /* El color lo controla tu panel de colores */
+        transition: opacity 0.3s;
+    }
+    .main-navigation a:hover { opacity: 0.7; }
+}
+
+/* --- MENÚ MÓVIL / TABLET (Pantallas Pequeñas) --- */
+@media (max-width: 991px) {
+    
+    /* Botón Hamburguesa */
+    .mobile-toggle {
+        display: block;
+        background: transparent; border: none;  cursor: pointer;
+        z-index: 200;
+    }
+    .mobile-toggle .bar {
+        display: block; width: 25px; height: 3px; background: currentColor; margin: 5px 0;
+    }
+
+    /* Contenedor Off-Canvas (Oculto por defecto) */
+    .main-navigation {
+        position: fixed;
+        top: 0; left: -100%; /* Fuera de la pantalla a la izquierda */
+        width: 80%; max-width: 300px;
+        height: 100vh;
+        background-color: var(--header-bg);/* O var(--header-bg) */
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        padding: 60px 20px 20px;
+        transition: left 0.3s ease-in-out;
+        z-index: 1000;
+        display: block !important; /* Forzar bloque para que funcione la animación */
+    }
+
+    /* Clase activa para abrir el menú */
+    .main-navigation.is-open {
+        left: 0;
+    }
+
+    /* Lista vertical */
+    .main-navigation .menu-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        list-style: none; margin: 0; padding: 0;
+    }
+    
+    .main-navigation a {
+        font-size: 1.1rem;
+        display: block;
+     
+        padding-bottom: 10px;
+    }
+
+    /* Botón Cerrar (X) */
+    .mobile-close {
+        position: absolute;
+        top: 15px; right: 15px;
+        background: transparent; border: none;
+        font-size: 2rem; line-height: 1;
+        cursor: pointer;
+    }
+    
+    /* Fondo oscuro (Backdrop) opcional */
+    body.menu-open::before {
+        content: ''; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999;
+    }
+}
+
+/* Dropdown */
+@media (min-width: 992px) {
+    
+    /* El contenedor padre debe ser relativo para posicionar el hijo */
+    .main-navigation .menu-item-has-children {
+        position: relative;
+    }
+
+    /* Flechita hacia abajo para indicar que hay menú */
+    .main-navigation .menu-item-has-children > a::after {
+        content: ''; 
+        display: inline-block;
+        margin-left: 6px;
+        vertical-align: middle;
+        border-top: 4px solid currentColor;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        opacity: 0.5;
+    }
+
+    /* La Caja del Submenú (Oculta por defecto) */
+    .main-navigation .sub-menu {
+        display: block; /* Usamos block pero con visibilidad para animar */
+        visibility: hidden;
+        opacity: 0;
+        position: absolute;
+        top: 100%; /* Justo debajo del padre */
+        left: 0;
+        min-width: 220px; /* Ancho mínimo */
+        background: #ffffff;
+        border-radius: 12px; /* Bordes redondeados como la foto */
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12); /* Sombra suave elegante */
+        padding: 10px 0;
+        list-style: none;
+        margin: 15px 0 0 0; /* Un poco separado arriba */
+        z-index: 999;
+        transform: translateY(10px); /* Para animación de subida */
+        transition: all 0.3s ease;
+    }
+
+    /* Triangulito decorativo arriba de la caja (Opcional, estilo "burbuja") */
+    .main-navigation .sub-menu::before {
+        content: '';
+        position: absolute;
+        top: -6px; left: 20px;
+        width: 12px; height: 12px;
+        background: #fff;
+        transform: rotate(45deg);
+        box-shadow: -2px -2px 5px rgba(0,0,0,0.04);
+    }
+
+    /* MOSTRAR AL PASAR EL MOUSE (Hover) */
+    .main-navigation .menu-item-has-children:hover > .sub-menu {
+        visibility: visible;
+        opacity: 1;
+        margin-top: 10px; /* Se acerca un poco */
+        transform: translateY(0);
+    }
+
+    /* Enlaces del Submenú */
+    .main-navigation .sub-menu li {
+        display: block;
+    }
+
+    .main-navigation .sub-menu a {
+        display: block;
+        padding: 10px 20px;
+        color: #333; /* Color texto oscuro */
+        font-size: 0.95rem;
+        white-space: nowrap; /* Que no se rompa la línea */
+        transition: background 0.2s;
+    }
+
+    .main-navigation .sub-menu a:hover {
+        background-color: #f3f4f6; /* Gris muy suave al pasar mouse */
+        color: var(--theme-color-brand, #4f46e5); /* Color de marca */
+    }
+}
+
+/* 2. ESTILO EN MÓVIL (Off-Canvas) */
+@media (max-width: 991px) {
+    /* En móvil no queremos flotar, queremos que se vea debajo */
+    .main-navigation .sub-menu {
+        position: static;
+        box-shadow: none;
+        background: transparent;
+        padding: 0 0 0 15px; /* Indentación a la izquierda */
+        margin: 10px 0;
+        border-left: 2px solid #eee; /* Línea guía */
+        display: block; /* Siempre visible en móvil para facilitar */
+    }
+
+    .main-navigation .sub-menu a {
+        font-size: 1rem;
+        padding: 8px 0;
+        color: #666;
+    }
+    
+    /* Ocultar flechita en móvil o ajustarla */
+    .main-navigation .menu-item-has-children > a::after {
+        float: right;
+        margin-top: 5px;
+    }
+}
+
+/* --- FLECHA EN ESCRITORIO (Min-width 992px) --- */
+@media (min-width: 992px) {
+    /* Ocultamos el botón móvil por si acaso */
+    button.dropdown-toggle { display: none; }
+
+    /* Dibujamos la flecha estilo "Buy Theme" usando ::after */
+    .main-navigation .menu-item-has-children > a::after {
+        content: ''; 
+        display: inline-block;
+        
+        /* MEDIDAS EXACTAS DE LA CAPTURA */
+        width: 6px; 
+        height: 6px;
+        
+        /* BORDES FINOS */
+        border-right: 2px solid currentColor; /* Usa el color del texto */
+        border-bottom: 2px solid currentColor;
+        border-top: 0;
+        border-left: 0;
+        
+        /* POSICIÓN Y ROTACIÓN */
+        transform: rotate(45deg);
+        margin-left: 8px;
+        vertical-align: middle;
+        margin-top: -3px; /* El truco para centrarlo perfecto */
+        
+        transition: transform 0.3s ease;
+        opacity: 0.7;
+    }
+
+    /* Animación al pasar el mouse (Gira hacia arriba) */
+    .main-navigation .menu-item-has-children:hover > a::after {
+        transform: rotate(225deg);
+        margin-top: 3px; /* Compensación visual al girar */
+        opacity: 1;
+    }
+}
+
+
+/* --- ESTILOS MÓVIL (Acordeón - Max-width 991px) --- */
+@media (max-width: 991px) {
+
+    /* 1. Posicionamiento relativo */
+    .main-navigation .menu-item-has-children {
+        position: relative;
+    }
+
+    /* 2. Ocultar la flecha de escritorio */
+    .main-navigation .menu-item-has-children > a::after {
+        display: none;
+    }
+
+    /* 3. El Botón (Contenedor) */
+    button.dropdown-toggle {
+        position: absolute;
+        top: -10px;
+        right: 0;
+        width: 44px;
+        height: 44px; /* Debe coincidir con la altura de tus enlaces */
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        display: flex; /* Flexbox para centrar la flecha dentro */
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        outline: none;
+    }
+
+    /* 4. El Icono Chevron (CORREGIDO con estilo Buy Theme) */
+    button.dropdown-toggle .chevron {
+        display: block;
+        
+        /* MEDIDAS EXACTAS */
+        width: 6px; 
+        height: 6px;
+        
+        /* BORDES */
+        border-right: 2px solid #666; 
+        border-bottom: 2px solid #666;
+        
+        /* ROTACIÓN */
+        transform: rotate(45deg);
+        
+        /* AJUSTE VISUAL */
+        margin-top: -3px; 
+        
+        transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* 5. Submenú Oculto */
+    .main-navigation .sub-menu {
+        display: none;
+        
+        padding-left: 0;
+        margin: 0;
+        
+    }
+    
+    .main-navigation .sub-menu a {
+        padding-left: 30px !important;
+        font-size: 0.95rem;
+    }
+
+    /* --- ESTADO ACTIVO --- */
+    
+    .menu-item-has-children.submenu-active > .sub-menu {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    /* Rotar flecha hacia arriba al abrir */
+    .menu-item-has-children.submenu-active > .dropdown-toggle .chevron {
+        transform: rotate(225deg); 
+        margin-top: 3px; /* Compensación al girar */
+        border-color: var(--theme-color-brand, #4f46e5);
+    }
+}
+
+
+
+
+
+/* 2. Estilo del Botón Toggle */
+.theme-toggle {
+    background: transparent;
+    border: 2px solid transparent; /* Transparente por defecto */
+    border-radius: 50%;
+   
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--header-text); /* Se adapta al color del header */ /* Separación del menú */
+    transition: background 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background: rgba(125,125,125,0.1); /* Efecto hover sutil */
+}
+
+/* 3. Lógica de Iconos (Mostrar uno u otro) */
+.theme-toggle .icon-moon { display: none; }
+.theme-toggle .icon-sun { display: block; }
+
+/* Cuando estamos en modo oscuro: */
+body.dark-mode .theme-toggle .icon-sun { display: none; }
+body.dark-mode .theme-toggle .icon-moon { display: block; color: #fbbf24; /* Color amarillo luna */ }
+
+/* Arreglo para inputs en modo oscuro */
+body.dark-mode input, 
+body.dark-mode textarea {
+    background-color: #374151;
+    color: #fff;
+    border-color: #4b5563;
+}
+
+.main-navigation-icon{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+
+
+/* Animación simple de caída */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Aplicar variables a las tarjetas (Importante para que cambien) */
+.post-card {
+    background-color: var(--card-bg, #ffffff) !important;
+    border-color: var(--card-border, #e5e7eb) !important;
+}
+/* Search Icon */
+
+.header-search-icon {
+    /* 1. Resetear estilos de botón feos del navegador */
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    outline: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.search-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.96);
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.search-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.search-container {
+    width: 90%;
+    max-width: 800px;
+    text-align: center;
+    position: relative;
+}
+
+/* El Formulario */
+.mainter-clean-form {
+    position: relative;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* --- CAMBIOS AQUÍ: Input Redondeado --- */
+.search-field-hero {
+    width: 100%;
+    background: #f3f4f6; /* Fondo gris muy claro para resaltar */
+    border: 2px solid transparent; /* Borde transparente inicial */
+    border-radius: 50px; /* ¡Bordes completamente redondeados! */
+    font-size: 2rem; /* Un poco más pequeño para que quepa mejor */
+    font-weight: 300;
+    color: #111827;
+    padding: 20px 70px 20px 30px; /* Más espacio a los lados */
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+}
+
+.search-field-hero::placeholder {
+    color: #9ca3af;
+    opacity: 1;
+}
+
+/* Al hacer foco, se pinta el borde */
+.search-field-hero:focus {
+    background: #fff; /* Fondo blanco al escribir */
+    border-color: var(--theme-color-brand, #e25822); /* Color de tu marca */
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* Sombra más pronunciada */
+}
+
+/* Botón flecha (Enter) */
+.search-submit-icon {
+    position: absolute;
+    right: 15px; /* Ajustado para el borde redondeado */
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 10px;
+    transition: color 0.3s, transform 0.2s;
+    border-radius: 50%; /* Botón también redondeado */
+}
+
+.search-submit-icon:hover {
+    color: var(--theme-color-brand, #e25822);
+    background: rgba(0,0,0,0.05);
+    transform: translateY(-50%) translateX(3px);
+}
+
+/* Texto de ayuda (Hint) */
+.search-hint {
+    margin-top: 25px;
+    font-size: 0.9rem;
+    color: #6b7280;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s 0.2s;
+}
+
+.search-overlay.is-active .search-hint {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.search-hint span {
+    background: #e5e7eb;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Botón Cerrar (X) */
+.close-btn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 10px;
+    transition: transform 0.3s, color 0.3s;
+    z-index: 100;
+    border-radius: 50%;
+}
+
+.close-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    transform: rotate(90deg);
+}
+
+/* --- 📱 RESPONSIVE (MÓVIL) --- */
+@media (max-width: 768px) {
+    .search-field-hero {
+        font-size: 1.5rem;
+        padding: 15px 50px 15px 25px;
+    }
+    .search-submit-icon {
+        right: 10px;
+        padding: 8px;
+    }
+    .close-btn {
+        top: 20px; right: 20px;
+    }
+}
+
+
+
+/* Hero Bento  */
+.hero-bento-section {
+    padding: 30px 0 50px;
+}
+
+.section-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 25px;
+    display: flex; align-items: center;
+}
+
+/* --- 🍱 EL GRID WRAPPER --- */
+.bento-grid-wrapper {
+    display: grid;
+    gap: 20px;
+    /* CLAVE: Definimos 4 columnas iguales */
+    grid-template-columns: repeat(4, 1fr);
+    /* CLAVE: Definimos 2 filas de altura EXACTA (240px cada una) */
+    grid-template-rows: 240px 240px; 
+}
+
+/* --- TARJETAS --- */
+.bento-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #111; /* Fondo oscuro por seguridad */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bento-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    z-index: 2;
+}
+
+.bento-link {
+    display: block; width: 100%; height: 100%; position: relative; color: #fff;
+}
+
+/* --- IMAGENES (Object Fit) --- */
+.bento-image-wrap {
+    width: 100%; height: 100%; position: absolute; inset: 0;
+}
+.bento-image-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover; /* Evita que se estiren o deformen */
+    transition: transform 0.6s ease;
+}
+.bento-item:hover .bento-image-wrap img { transform: scale(1.05); }
+
+/* Gradiente Negro Suave */
+.bento-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
+}
+
+/* --- POSICIONAMIENTO (Escritorio) --- */
+@media (min-width: 992px) {
+    /* EL GRANDE (bento-big): Ocupa la mitad izquierda (2x2) */
+    .bento-big {
+        grid-column: span 2;
+        grid-row: span 2;
+    }
+    
+    /* LOS PEQUEÑOS (bento-small): Ocupan 1 hueco */
+    .bento-small {
+        grid-column: span 1;
+        grid-row: span 1;
+    }
+}
+
+/* --- ESTILOS DE TEXTO --- */
+.bento-content {
+    position: absolute; bottom: 0; left: 0; width: 100%;
+    padding: 20px; z-index: 10;
+}
+
+/* 🏷️ ETIQUETA ESTILO AMAZON (Pequeña y Naranja) */
+.amazon-cat {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #ff9900; /* Naranja Amazon */
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+    /* Sombra de texto por si el fondo es claro */
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.bento-title {
+    color: #fff; margin: 0 0 5px;
+    line-height: 1.3;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.bento-big .bento-title { font-size: 1.8rem; font-weight: 800; } /* Título grande */
+.bento-small .bento-title { font-size: 1rem; font-weight: 700; }  /* Título pequeño */
+
+.bento-meta {
+    font-size: 0.75rem; color: rgba(255,255,255,0.7);
+}
+
+/* Badge "Destacado" */
+.badge-featured {
+    position: absolute; top: 15px; left: 15px;
+    background: #e25822; color: #fff;
+    padding: 4px 10px; border-radius: 4px;
+    font-size: 0.7rem; font-weight: bold; z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* --- 📱 MÓVIL (Slider Horizontal Fluido) --- */
+@media (max-width: 991px) {
+    .bento-grid-wrapper {
+        display: flex; /* Cambiamos Grid a Flex */
+        overflow-x: auto; /* Scroll horizontal */
+        scroll-snap-type: x mandatory; /* Efecto magnético */
+        gap: 15px;
+        padding-bottom: 15px;
+        /* Reseteamos el grid template rows */
+        grid-template-rows: unset; 
+        grid-template-columns: unset;
+    }
+    
+    /* Ocultar barra scroll */
+    .bento-grid-wrapper::-webkit-scrollbar { display: none; }
+
+    .bento-item {
+        flex: 0 0 85%; /* Tarjetas al 85% del ancho de pantalla */
+        height: 360px; /* Altura fija en móvil */
+        scroll-snap-align: center; /* Se centra al soltar */
+    }
+    
+    .bento-big .bento-title { font-size: 1.4rem; }
+}
+
+
+/* --- LÓGICA DE LAYOUT INTELIGENTE --- */
+
+/* 1. Si el body tiene la clase 'no-sidebar', el contenido principal ocupa todo el ancho */
+body.no-sidebar #primary,
+body.full-width-layout #primary {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important; /* Si usas Flexbox */
+    margin-right: 0 !important;
+}
+
+/* 2. Aseguramos que el sidebar desaparezca visualmente por si acaso */
+body.no-sidebar #secondary,
+body.full-width-layout #secondary {
+    display: none !important;
+}
+
+/* 3. Ajuste para Grid (Si tu tema usa CSS Grid) */
+body.no-sidebar .site-content, 
+body.full-width-layout .site-content {
+    display: block !important; /* Rompe el grid de 2 columnas */
+}
+
+
+
+/* 3. FOOTER (Grid Layout) */
+
+/* =========================================
+   🦶 FOOTER INFERIOR (Diseño Flex Moderno)
+   ========================================= */
+
+.footer-lower {
+    background-color: var(--footer-bg, #0f172a); /* Tu color oscuro */
+    color: var(--footer-text, #94a3b8);
+    padding: 20px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.9rem;
+}
+
+/* Contenedor Flex: Separa Izquierda y Derecha */
+.footer-lower-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* CRUCIAL para móviles */
+    gap: 20px;
+}
+
+/* --- LADO IZQUIERDO (Copyright) --- */
+.copyright-text {
+    font-weight: 500;
+}
+
+/* --- LADO DERECHO (Widgets) --- */
+.footer-bottom-right-area {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* 🛠️ TRUCO MAESTRO: Alinear cualquier menú horizontalmente */
+/* Esto afecta al Widget de "Menú de Navegación" nativo de WP */
+.footer-inline-widget ul,
+.footer-inline-widget .menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px; /* Espacio entre enlaces */
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.footer-inline-widget li {
+    margin: 0;
+    padding: 0;
+    border: none; /* Quitamos bordes raros */
+}
+
+.footer-inline-widget a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+    font-weight: 500;
+}
+
+.footer-inline-widget a:hover {
+    color: var(--theme-color-brand, #e25822);
+}
+
+/* --- 📱 RESPONSIVE (Móviles) --- */
+@media (max-width: 768px) {
+    .footer-lower-content {
+        flex-direction: column-reverse; /* Pone los enlaces ARRIBA y el copy ABAJO */
+        text-align: center;
+    }
+
+    .footer-bottom-right-area {
+        width: 100%;
+        justify-content: center; /* Centrar widgets */
+    }
+
+    .footer-inline-widget ul {
+        justify-content: center; /* Centrar enlaces */
+    }
+}
+
+/* --- Widget: Mainter Enlaces Flexibles --- */
+
+.mainter-links-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Modo Texto (Hereda estilos base, pero aseguramos) */
+.mainter-links-list.mode-text a {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Modo Iconos (Más grandes y con espacio) */
+.mainter-links-list.mode-icons {
+    gap: 15px; /* Iconos más juntitos */
+}
+
+.mainter-links-list.mode-icons a {
+    font-size: 1.2rem; /* Iconos más grandes */
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.05); /* Fondo sutil */
+    border-radius: 50%; /* Redondos */
+    transition: all 0.3s ease;
+}
+
+.mainter-links-list.mode-icons a:hover {
+    background: var(--theme-color-brand, #e25822);
+    color: #fff;
+    transform: translateY(-3px); /* Efecto elevación */
+}
+
+/* --- ⚡ ICONOS SVG SOCIALES (Footer) --- */
+
+.mainter-links-list.mode-icons a svg {
+    width: 18px;    /* Tamaño del icono */
+    height: 18px;
+    fill: currentColor; /* Esto permite que hereden el color del texto */
+    display: block;
+}
+
+/* El círculo del fondo */
+.mainter-links-list.mode-icons a {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.05); /* Fondo oscuro suave */
+    border-radius: 50%;
+    color: #94a3b8; /* Color inicial del icono (gris) */
+    transition: all 0.3s ease;
+}
+
+/* Hover: Cambiar color y fondo */
+.mainter-links-list.mode-icons a:hover {
+    background: var(--theme-color-brand, #e25822); /* Tu color de marca */
+    color: #ffffff; /* Icono blanco */
+    transform: translateY(-3px);
+}
+
+/* --- FOOTER INFERIOR (Flexbox Dual) --- */
+.footer-lower-content {
+    display: flex;
+    justify-content: space-between; /* Izquierda <---> Derecha */
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Área Izquierda */
+.footer-bottom-left-area {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+/* Área Derecha (Hereda lo que hicimos antes) */
+.footer-bottom-right-area {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .footer-lower-content {
+        flex-direction: column-reverse; /* En móvil: Iconos arriba, Copy abajo */
+        text-align: center;
+    }
+    .footer-bottom-left-area, 
+    .footer-bottom-right-area {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+
+
+/* --- 📰 GRID DE ENTRADAS (CARDS) --- */
+.blog-grid-layout {
+    display: grid;
+    gap: 30px; /* Espacio entre tarjetas */
+    margin-top: 40px;
+    width: 100%;
+}
+
+/* 📱 MÓVIL (Por defecto): 1 Columna */
+.blog-grid-layout {
+    grid-template-columns: 1fr;
+}
+
+/* 💻 TABLET (Más de 768px): 2 Columnas */
+@media (min-width: 768px) {
+    .blog-grid-layout {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 🖥️ ESCRITORIO (Más de 1024px): 3 Columnas */
+@media (min-width: 1024px) {
+    .blog-grid-layout {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+
+/* Sidebar Sticky */
+.is-sidebar-sticky #secondary, 
+.is-sidebar-sticky .widget-area {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 20px; 
+    align-self: start;
+    height: fit-content;
+}
+
+/* En móvil desactivamos el sticky porque la sidebar va abajo */
+@media (max-width: 991px) {
+    .is-sidebar-sticky #secondary,
+    .is-sidebar-sticky .widget-area {
+        position: static;
+    }
+}
+
+
+
+
+/* --- 📢 ANUNCIOS --- */
+.mainter-ad {
+    display: block;
+    margin: 20px auto; /* Centrado y con aire */
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden; /* Evita que rompa el móvil */
+    clear: both;
+}
+
+/* Etiqueta opcional "Publicidad" */
+.mainter-ad::before {
+    content: 'Publicidad';
+    display: block;
+    font-size: 10px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+/* Ajustes específicos */
+.ad-header { margin-top: 10px; margin-bottom: 10px; }
+.ad-sidebar { margin-bottom: 30px; }
+
+
+
+/* Paginacion Mejorada */
+
+/* 1. Contenedor General */
+.mainter-pagination {
+    margin: 40px 0;
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Centrado */
+}
+
+.nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* Espacio entre botones */
+    align-items: center;
+}
+
+/* 2. Estilo de los Botones (Números y Flechas) */
+.nav-links a,
+.nav-links span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px; /* Tamaño mínimo táctil */
+    height: 44px;
+    padding: 0 10px;
+    background: #fff; /* Fondo blanco */
+    border: 1px solid #e5e7eb; /* Borde sutil */
+    border-radius: 50px; /* ¡Forma de píldora/círculo! */
+    color: #4b5563;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+/* 3. Efecto Hover (Pasar mouse) */
+.nav-links a:hover {
+    border-color: var(--theme-color-brand, #e25822);
+    color: var(--theme-color-brand, #e25822);
+    transform: translateY(-2px); /* Pequeño salto */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+/* 4. Página Actual (Activa) */
+.nav-links span.current {
+    background: var(--theme-color-brand, #e25822); /* Tu color de marca */
+    border-color: var(--theme-color-brand, #e25822);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(226, 88, 34, 0.3); /* Resplandor del color */
+    pointer-events: none; /* No clicable */
+}
+
+/* Ajuste para las flechas SVG */
+.nav-links svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.5px;
+}
+
+/* =========================================
+   Modo oscuro
+   ========================================= */
+/* --- 🌙 MODO OSCURO (Paginación) --- */
+body.dark-mode .nav-links a,
+body.dark-mode .nav-links span.dots {
+    background: #1f2937; /* Gris oscuro */
+    border-color: #374151;
+    color: #e5e7eb;
+    box-shadow: none;
+}
+
+body.dark-mode .nav-links a:hover {
+    border-color: var(--theme-color-brand, #e25822);
+    background: #374151;
+}
+
+/* El botón activo en dark mode se mantiene con el color de marca */
+body.dark-mode .nav-links span.current {
+    background: var(--theme-color-brand, #e25822);
+    color: #fff;
+}
+
+
+/* --- 🌙 MODO OSCURO --- */
+body.dark-mode .search-overlay {
+    background: rgba(10, 10, 10, 0.96);
+}
+
+body.dark-mode .search-field-hero {
+    background: #1f2937; /* Fondo oscuro */
+    color: #fff;
+    box-shadow: none;
+}
+
+body.dark-mode .search-field-hero::placeholder {
+    color: #6b7280;
+}
+
+body.dark-mode .search-field-hero:focus {
+    background: #111827; /* Fondo más oscuro al foco */
+    border-color: var(--theme-color-brand, #e25822);
+}
+
+body.dark-mode .search-submit-icon {
+    color: #9ca3af;
+}
+body.dark-mode .search-submit-icon:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+}
+
+body.dark-mode .search-hint {
+    color: #9ca3af;
+}
+body.dark-mode .search-hint span {
+    background: #374151;
+    color: #e5e7eb;
+}
+
+body.dark-mode .close-btn:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+}
+
+body.dark-mode .header-search-icon svg {
+    color: #fff;
+}
+
+body.dark-mode .mobile-toggle svg{
+   color: #fff;
+}
+
+
+/* =========================================
+   🃏 TARJETAS UNIVERSALES (Home + Relacionados)
+   ========================================= */
+/* --- 🧱 WIDGETS (Sidebar) --- */
+
+.mainter-widget-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Espacio vertical entre tarjetas */
+}
+
+/* OPCIONAL: Ajuste si usas el modo OVERLAY en el sidebar */
+/* Como el sidebar es angosto, 300px de alto puede ser mucho. Aquí lo bajamos a 200px solo en widgets. */
+.widget-area .post-card.style-overlay {
+    height: 200px; 
+}
+.widget-area .post-card.style-overlay .card-title {
+    font-size: 1rem; /* Letra un poco más pequeña para sidebar */
+}
+
+/* 1. CONTENEDOR BASE (Compartido por todos) */
+.post-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Importante: Asegura que el contenido no se desborde */
+    width: 100%; 
+}
+
+/* Efecto Hover Global */
+.post-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* Enlace que cubre todo */
+.post-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Ocupa todo el alto */
+    height: 100%;
+}
+
+/* Imagen Base */
+.post-card-image {
+    position: relative;
+    width: 100%;
+    /* Altura por defecto para diseño Básico */
+    height: 200px; 
+    overflow: hidden;
+}
+
+.post-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.post-card:hover .post-card-image img {
+    transform: scale(1.05);
+}
+
+/* Contenido Base */
+.post-card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* Títulos */
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.4;
+    color: var(--theme-text-main, #ffffff);
+}
+
+/* Metadatos (Fecha) */
+.card-meta {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+
+
+/* =========================================
+   🎨 VARIANTE 1: BÁSICO (Imagen Arriba)
+   ========================================= */
+.post-card.style-basic {
+    border: 1px solid #e5e7eb;
+}
+
+/* =========================================
+   🎨 VARIANTE 2: OVERLAY (Texto sobre Imagen)
+   ========================================= */
+.post-card.style-overlay {
+    /* ¡CRUCIAL! Altura fija para que no colapse */
+    height: 300px; 
+    background-color: #000; /* Fondo negro de seguridad */
+    border: none;
+}
+
+/* La imagen ocupa todo el fondo */
+.post-card.style-overlay .post-card-image {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+}
+
+/* Gradiente Oscuro para leer texto */
+.card-overlay-gradient {
+    position: absolute;
+    top: 0; left: 0; 
+    width: 100%; height: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+    z-index: 2;
+}
+
+/* El contenido flota sobre la imagen */
+.post-card.style-overlay .post-card-content {
+    position: relative;
+    z-index: 3;
+    justify-content: flex-end; /* Empuja el texto abajo */
+    height: 100%;
+    color: #fff;
+    padding-bottom: 25px;
+}
+
+/* Ajustes de color para Overlay */
+.post-card.style-overlay .card-title {
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    font-size: 1.25rem;
+}
+
+.post-card.style-overlay .card-meta {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- ♿ ACCESIBILIDAD (Texto solo para lectores) --- */
+.screen-reader-text {
+    border: 0;
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(50%);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+    word-wrap: normal !important;
+}
