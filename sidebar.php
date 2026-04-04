@@ -1,0 +1,25 @@
+<?php
+/**
+ * The sidebar containing the main widget area
+ *
+ * @link https://developer.wordpress.org/themes/basics/template-files/#template-partials
+ *
+ * @package mainter
+ */
+
+if ( ! is_active_sidebar( 'sidebar-1' ) ) {
+	return;
+}
+?>
+
+<aside id="secondary" class="widget-area">
+	<?php if ( function_exists('mainter_render_ad') ) mainter_render_ad( 'ad_sidebar' ); ?>
+	<?php 
+// Antes tenías solo: get_sidebar();
+// Ahora pon esto:
+
+if ( mainter_has_sidebar() ) {
+    dynamic_sidebar( 'sidebar-1' );
+}
+?>
+</aside><!-- #secondary -->
